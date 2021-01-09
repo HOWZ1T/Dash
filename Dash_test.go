@@ -85,4 +85,32 @@ func TestHash(t *testing.T) {
 		t.Errorf("Expected megumin hash to be different to aqua hash!\nGot %s == %s", mpHash, ajHash)
 		return
 	}
+
+	dist, err := HammingDistanceHex(apHash, ajHash)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if dist != 0 {
+		t.Errorf("Expected distance between aqua images to be 0, got %d", dist)
+	}
+
+	dist, err = HammingDistanceHex(mpHash, ajHash)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if dist == 0 {
+		t.Errorf("Expected distance between aqua and megumin images to not be 0, got %d", dist)
+	}
+
+	meguBright, err := loadImage("test_imgs/megu_bright.png", "png")
+	dist, err = HammingDistanceHex(mpHash, HashAsHex(meguBright, l))
+	if err != nil {
+		t.Error(err)
+	}
+
+	if dist != 2 {
+		t.Errorf("Expected distance between megumin and megu_bright images to be 2, got %d", dist)
+	}
 }

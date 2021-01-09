@@ -2,11 +2,33 @@ package dash
 
 import (
 	"encoding/hex"
+	"errors"
 	"github.com/nfnt/resize"
 	"image"
 	"image/color"
 	"strconv"
 )
+
+type bitString string
+
+func (b bitString) asByteSlice() []byte {
+	var out []byte
+	var str string
+
+	for i := len(b); i > 0; i -= 8 {
+		if i-8 < 0 {
+			str = string(b[0:i])
+		} else {
+			str = string(b[i-8 : i])
+		}
+		v, err := strconv.ParseUint(str, 2, 8)
+		if err != nil {
+			panic(err)
+		}
+		out = append([]byte{byte(v)}, out...)
+	}
+	return out
+}
 
 // converts image to grayscale
 func grayscale(img image.Image) image.Image {
@@ -51,24 +73,7 @@ func Hash(img image.Image, hashLen uint) []byte {
 		diffStr += strconv.Itoa(int(bit))
 	}
 
-	bytes := make([]byte, len(diffStr)/8)
-	for len(diffStr) > 7 {
-		curByteStr := diffStr[:8]
-		diffStr = diffStr[8:]
-		curByteInt, _ := strconv.ParseUint(curByteStr, 2, 8)
-		curByte := byte(curByteInt)
-		bytes = append(bytes, curByte)
-	}
-
-	// remove leading zeros
-	for _, byt := range bytes {
-		if byt == 0 {
-			bytes = bytes[1:]
-		} else {
-			break
-		}
-	}
-
+	bytes := bitString(diffStr).asByteSlice()
 	return bytes
 }
 
@@ -77,4 +82,29 @@ func Hash(img image.Image, hashLen uint) []byte {
 // returns hash as hex string
 func HashAsHex(img image.Image, hashLen uint) string {
 	return hex.EncodeToString(Hash(img, hashLen))
+}
+
+func HammingDistance(bytesA []byte, bytesB []byte) (int, error) {
+	if len(bytesA) != len(bytesB) {
+		return -1, errors.New("bytes A and B are of differing lengths")
+	}
+
+	diff := 0
+	for i := 0; i < len(bytesA); i++ {
+		b1 := bytesA[i]
+		b2 := bytesB[i]
+		// use byte mask to compare individual bits
+		for j := 0; j < 8; j++ {
+			mask := byte(1 << uint(j))
+			if (b1 & mask) != (b2 & mask) {
+				diff += 1
+			}
+		}
+	}
+
+	return diff, nil
+}
+
+func HammingDistanceHex(a string, b string) (int, error) {
+	return HammingDistance([]byte(a), []byte(b))
 }
