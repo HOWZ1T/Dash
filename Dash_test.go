@@ -64,6 +64,18 @@ func TestHash(t *testing.T) {
 	apHash := HashAsHex(aquaPng, l)
 	mpHash := HashAsHex(meguPng, l)
 
+	if ajHash != "616e35d28e85921898" {
+		t.Errorf("Expected aqua jpg hash to be 616e35d28e85921898 got %s", ajHash)
+	}
+
+	if apHash != "616e35d28e85921898" {
+		t.Errorf("Expected aqua png hash to be 616e35d28e85921898 got %s", apHash)
+	}
+
+	if mpHash != "3731bcce426130c060" {
+		t.Errorf("Expected megumin hash to be 3731bcce426130c060 got %s", mpHash)
+	}
+
 	if ajHash != apHash {
 		t.Errorf("Expected both aqua hashes to be equal!\nGot: %s != %s", ajHash, apHash)
 		return
